@@ -1,0 +1,21 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "HabitSync",
+                "description": "Enter your HabitSync server URL and API key.",
+                "data": {
+                    "host": "Host",
+                    "api_key": "API Key"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Failed to connect to the server.",
+            "auth": "Invalid API key."
+        },
+        "abort": {
+            "already_configured": "This server is already configured."
+        }
+    }
+}

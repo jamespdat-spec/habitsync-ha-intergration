@@ -1,0 +1,11 @@
+{
+  "domain": "habitsync",
+  "name": "HabitSync",
+  "documentation": "https://github.com/jofoerster/habitsync",
+  "issue_tracker": "https://github.com/jofoerster/habitsync/issues",
+  "codeowners": ["@jofoerster"],
+  "version": "0.1.0",
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "dependencies": []
+}
