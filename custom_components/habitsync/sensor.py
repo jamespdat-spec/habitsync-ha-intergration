@@ -11,11 +11,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     api = hass.data[DOMAIN][config_entry.entry_id]
     habits = await api.get_habits()
     _LOGGER.info("Habits: %s", habits)
-    sensors = [HabitSyncSensor(api, habit) for habit in habits]
+    sensors = []
+    for habit in habits:
+        # Create three sensors per habit: value, percentage, and status
+        sensors.append(HabitSyncValueSensor(api, habit))
+        sensors.append(HabitSyncPercentageSensor(api, habit))
+        sensors.append(HabitSyncStatusSensor(api, habit))
     async_add_entities(sensors, True)
 
 class HabitSyncSensor(Entity):
-    """Representation of a HabitSync sensor."""
+    """Base class for HabitSync sensors."""
 
     def __init__(self, api, habit):
         """Initialize the sensor."""
@@ -63,6 +68,33 @@ class HabitSyncSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    async def async_update(self):
+        """Fetch new state data for the sensor. Override in subclasses."""
+        pass
+
+
+class HabitSyncValueSensor(HabitSyncSensor):
+    """Sensor showing the current record value/status."""
+
+    def __init__(self, api, habit):
+        """Initialize the sensor."""
+        super().__init__(api, habit)
+        self._attributes = {}
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        hid = self._get_habit_id()
+        if hid is not None:
+            return f"habitsync_value_{hid}"
+        name = (self.habit.get("name") or "habitsync_habit").lower().replace(" ", "_")
+        return f"habitsync_value_{name}"
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self.habit.get('name') or self._get_habit_id() or 'HabitSync'} Value"
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
@@ -115,14 +147,12 @@ class HabitSyncSensor(Entity):
             )
             if hid is not None and target_id is not None and hid == target_id:
                 _LOGGER.info("Habit: %s", habit)
-                # Prefer common status/completion keys
                 self._state = (
                     habit.get("status")
                     or habit.get("completion")
                     or habit.get("value")
                     or habit.get("recordValue")
                 )
-                # Set attributes for the UI to show more details
                 self._attributes = {
                     k: v for k, v in habit.items() if k in ("uuid", "habitUuid", "epochDay", "completion", "status", "recordValue")
                 }
@@ -131,4 +161,96 @@ class HabitSyncSensor(Entity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes for the sensor."""
-        return getattr(self, "_attributes", None)
+        return getattr(self, "_attributes", {}) or None
+
+
+class HabitSyncPercentageSensor(HabitSyncSensor):
+    """Sensor showing the current completion percentage."""
+
+    def __init__(self, api, habit):
+        """Initialize the sensor."""
+        super().__init__(api, habit)
+        self._attributes = {}
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        hid = self._get_habit_id()
+        if hid is not None:
+            return f"habitsync_percentage_{hid}"
+        name = (self.habit.get("name") or "habitsync_habit").lower().replace(" ", "_")
+        return f"habitsync_percentage_{name}"
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self.habit.get('name') or self._get_habit_id() or 'HabitSync'} Percentage"
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return "%"
+
+    async def async_update(self):
+        """Fetch the completion percentage for this habit."""
+        target_id = self._get_habit_id()
+        if not target_id:
+            _LOGGER.warning("Cannot update percentage sensor: no habit ID found")
+            return
+
+        try:
+            habit_detail = await self.api.get_habit(target_id)
+            _LOGGER.debug("Habit detail for %s: %s", target_id, habit_detail)
+            self._state = habit_detail.get("currentPercentage")
+            self._attributes = {k: v for k, v in habit_detail.items() if k in ("currentMedal", "uuid", "habitUuid")}
+        except Exception as exc:
+            _LOGGER.debug("Failed to fetch habit details for %s: %s", target_id, exc)
+            self._state = None
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes for the sensor."""
+        return getattr(self, "_attributes", {}) or None
+
+
+class HabitSyncStatusSensor(HabitSyncSensor):
+    """Sensor showing the completion status (COMPLETED, MISSED, etc.)."""
+
+    def __init__(self, api, habit):
+        """Initialize the sensor."""
+        super().__init__(api, habit)
+        self._attributes = {}
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        hid = self._get_habit_id()
+        if hid is not None:
+            return f"habitsync_status_{hid}"
+        name = (self.habit.get("name") or "habitsync_habit").lower().replace(" ", "_")
+        return f"habitsync_status_{name}"
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return f"{self.habit.get('name') or self._get_habit_id() or 'HabitSync'} Status"
+
+    async def async_update(self):
+        """Fetch the completion status for today's record."""
+        target_id = self._get_habit_id()
+        if not target_id:
+            _LOGGER.warning("Cannot update status sensor: no habit ID found")
+            return
+
+        try:
+            record = await self.api.get_record(target_id)
+            _LOGGER.debug("Record status for %s: %s", target_id, record)
+            self._state = record.get("completion")
+            self._attributes = {k: v for k, v in record.items() if k in ("recordValue", "epochDay", "uuid")}
+        except Exception as exc:
+            _LOGGER.debug("Failed to fetch record status for %s: %s", target_id, exc)
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes for the sensor."""
+        return getattr(self, "_attributes", {}) or None

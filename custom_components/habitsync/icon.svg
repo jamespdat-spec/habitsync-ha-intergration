@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- Background circle -->
+  <circle cx="128" cy="128" r="120" fill="#e8f4f8" stroke="#4a90e2" stroke-width="2"/>
+  
+  <!-- Progress ring (70% filled) -->
+  <circle cx="128" cy="128" r="100" fill="none" stroke="#d1d5db" stroke-width="12"/>
+  <circle cx="128" cy="128" r="100" fill="none" stroke="#4a90e2" stroke-width="12" 
+          stroke-dasharray="439.8 628.3" stroke-dashoffset="0" stroke-linecap="round"
+          transform="rotate(-90 128 128)"/>
+  
+  <!-- Checkmark in center -->
+  <path d="M 100 130 L 120 150 L 160 100" fill="none" stroke="#22c55e" stroke-width="8" 
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

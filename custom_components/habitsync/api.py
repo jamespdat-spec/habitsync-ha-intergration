@@ -22,6 +22,13 @@ class HabitSyncApi:
         response.raise_for_status()
         return response.json()
 
+    async def get_habit(self, habit_id: str):
+        """Get a specific habit with full details including currentPercentage."""
+        await self._ensure_client()
+        response = await self.client.get(f"/api/habit/{habit_id}")
+        response.raise_for_status()
+        return response.json()
+
     async def get_record(self, habit_id: str, offset: int = 0, time_zone: str | None = None):
         """Get a record for a habit.
 

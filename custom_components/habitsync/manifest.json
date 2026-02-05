@@ -1,12 +1,13 @@
 {
   "domain": "habitsync",
   "name": "HabitSync",
-  "documentation": "https://github.com/jamespdat-spec/habitsync-ha-intergration",
-  "issue_tracker": "https://github.com/jamespdat-spec/habitsync-ha-intergration/issues",
   "codeowners": ["@jamespdat-spec"],
   "config_flow": true,
-  "version": "0.1.0",
+  "documentation": "https://github.com/jamespdat-spec/habitsync-ha-intergration",
+  "icon": "icon.svg",
+  "issue_tracker": "https://github.com/jamespdat-spec/habitsync-ha-intergration/issues",
   "iot_class": "cloud_polling",
   "requirements": [],
+  "version": "0.1.0",
   "dependencies": []
 }
