@@ -1,10 +1,12 @@
 """Config flow for HabitSync."""
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 from httpx import HTTPStatusError
 
 from .api import HabitSyncApi
-from .const import DOMAIN
+from .const import DOMAIN, SENSOR_TYPES, DEFAULT_SENSOR_TYPES, FEATURES, DEFAULT_FEATURES
 
 class HabitSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HabitSync."""
@@ -34,4 +36,35 @@ class HabitSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+        )
+
+    @callback
+    def async_get_options_flow(entry):
+        """Return the config flow for options."""
+        return HabitSyncOptionsFlow(entry)
+
+
+class HabitSyncOptionsFlow(config_entries.OptionsFlow):
+    """Handle options flow for HabitSync."""
+
+    def __init__(self, config_entry):
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Handle the initial options step."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        current_sensors = self.config_entry.options.get("sensor_types", list(DEFAULT_SENSOR_TYPES))
+        current_features = self.config_entry.options.get("features", list(DEFAULT_FEATURES))
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional("sensor_types", default=current_sensors): cv.multi_select(SENSOR_TYPES),
+                    vol.Optional("features", default=current_features): cv.multi_select(FEATURES),
+                }
+            ),
         )

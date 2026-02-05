@@ -18,4 +18,21 @@
             "already_configured": "This server is already configured."
         }
     }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "HabitSync Options",
+                "description": "Configure which sensors and features are enabled.",
+                "data": {
+                    "sensor_types": "Sensor Types",
+                    "features": "Features"
+                },
+                "data_description": {
+                    "sensor_types": "Select which sensor types to create for each habit",
+                    "features": "Select which features to enable"
+                }
+            }
+        }
+    }
 }

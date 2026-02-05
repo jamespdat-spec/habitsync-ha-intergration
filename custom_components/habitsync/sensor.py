@@ -2,7 +2,7 @@
 import logging
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import DOMAIN, SENSOR_TYPE_VALUE, SENSOR_TYPE_PERCENTAGE, SENSOR_TYPE_STATUS, DEFAULT_SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -11,12 +11,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     api = hass.data[DOMAIN][config_entry.entry_id]
     habits = await api.get_habits()
     _LOGGER.info("Habits: %s", habits)
+    
+    # Get configured sensor types
+    # Safe get for backwards compatibility with entries that don't have options yet
+    options = config_entry.options if config_entry.options else {}
+    enabled_types = set(options.get("sensor_types", list(DEFAULT_SENSOR_TYPES)))
+    
     sensors = []
     for habit in habits:
-        # Create three sensors per habit: value, percentage, and status
-        sensors.append(HabitSyncValueSensor(api, habit))
-        sensors.append(HabitSyncPercentageSensor(api, habit))
-        sensors.append(HabitSyncStatusSensor(api, habit))
+        # Create sensors based on enabled types
+        if SENSOR_TYPE_VALUE in enabled_types:
+            sensors.append(HabitSyncValueSensor(api, habit))
+        if SENSOR_TYPE_PERCENTAGE in enabled_types:
+            sensors.append(HabitSyncPercentageSensor(api, habit))
+        if SENSOR_TYPE_STATUS in enabled_types:
+            sensors.append(HabitSyncStatusSensor(api, habit))
+    
     async_add_entities(sensors, True)
 
 class HabitSyncSensor(Entity):

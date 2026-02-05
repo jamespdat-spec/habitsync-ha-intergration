@@ -2,12 +2,20 @@
 import logging
 from homeassistant.components.button import ButtonEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, FEATURE_BUTTONS, DEFAULT_FEATURES
 
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up HabitSync buttons."""
+    # Check if buttons are enabled
+    # Safe get for backwards compatibility with entries that don't have options yet
+    options = config_entry.options if config_entry.options else {}
+    enabled_features = set(options.get("features", list(DEFAULT_FEATURES)))
+    if FEATURE_BUTTONS not in enabled_features:
+        _LOGGER.debug("Mark Done buttons are disabled")
+        return
+    
     api = hass.data[DOMAIN][config_entry.entry_id]
     habits = await api.get_habits()
     buttons = []
