@@ -115,7 +115,10 @@ class HabitSyncValueSensor(HabitSyncSensor):
 
         # Fetch today's record for this specific habit
         try:
-            record = await self.api.get_record(target_id)
+            tz = None
+            if hasattr(self, "hass") and self.hass:
+                tz = self.hass.config.time_zone
+            record = await self.api.get_record(target_id, time_zone=tz)
             _LOGGER.debug("Record for habit %s: %s", target_id, record)
             # Extract state from record
             self._state = (
@@ -253,7 +256,10 @@ class HabitSyncStatusSensor(HabitSyncSensor):
             return
 
         try:
-            record = await self.api.get_record(target_id)
+            tz = None
+            if hasattr(self, "hass") and self.hass:
+                tz = self.hass.config.time_zone
+            record = await self.api.get_record(target_id, time_zone=tz)
             _LOGGER.debug("Record status for %s: %s", target_id, record)
             self._state = record.get("completion")
             self._attributes = {k: v for k, v in record.items() if k in ("recordValue", "epochDay", "uuid")}

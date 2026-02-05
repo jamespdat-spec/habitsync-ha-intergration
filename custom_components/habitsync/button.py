@@ -49,7 +49,10 @@ class HabitDoneButton(ButtonEntity):
             _LOGGER.error("Cannot mark habit done: no id for habit %s", self.habit)
             return
         try:
-            await self.api.create_record(hid, value=1.0)
+            tz = None
+            if hasattr(self, "hass") and self.hass:
+                tz = self.hass.config.time_zone
+            await self.api.create_record(hid, value=1.0, time_zone=tz)
             _LOGGER.info("Created record for habit %s", hid)
 
             # Refresh related sensor entities to reflect the new record
