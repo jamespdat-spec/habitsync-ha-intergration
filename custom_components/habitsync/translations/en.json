@@ -18,7 +18,7 @@
             "already_configured": "This server is already configured."
         }
     }
-    },
+    ,
     "options": {
         "step": {
             "init": {
