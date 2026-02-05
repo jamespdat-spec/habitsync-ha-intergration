@@ -50,7 +50,7 @@ class HabitSyncOptionsFlow(config_entries.OptionsFlow):
 
     def __init__(self, config_entry):
         """Initialize options flow."""
-        self.config_entry = config_entry
+        self._config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
         """Handle the initial options step."""
@@ -59,8 +59,8 @@ class HabitSyncOptionsFlow(config_entries.OptionsFlow):
         _LOGGER = logging.getLogger(__name__)
         try:
             # Ensure defaults are lists for the form
-            current_sensors = list(self.config_entry.options.get("sensor_types", list(DEFAULT_SENSOR_TYPES)))
-            current_features = list(self.config_entry.options.get("features", list(DEFAULT_FEATURES)))
+            current_sensors = list(self._config_entry.options.get("sensor_types", list(DEFAULT_SENSOR_TYPES)))
+            current_features = list(self._config_entry.options.get("features", list(DEFAULT_FEATURES)))
 
             schema = vol.Schema(
                 {
