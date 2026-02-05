@@ -1,5 +1,6 @@
 """Config flow for HabitSync."""
 import voluptuous as vol
+import logging
 from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
@@ -55,16 +56,20 @@ class HabitSyncOptionsFlow(config_entries.OptionsFlow):
         """Handle the initial options step."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
+        _LOGGER = logging.getLogger(__name__)
+        try:
+            # Ensure defaults are lists for the form
+            current_sensors = list(self.config_entry.options.get("sensor_types", list(DEFAULT_SENSOR_TYPES)))
+            current_features = list(self.config_entry.options.get("features", list(DEFAULT_FEATURES)))
 
-        current_sensors = self.config_entry.options.get("sensor_types", list(DEFAULT_SENSOR_TYPES))
-        current_features = self.config_entry.options.get("features", list(DEFAULT_FEATURES))
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
+            schema = vol.Schema(
                 {
                     vol.Optional("sensor_types", default=current_sensors): vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES.keys()))]),
                     vol.Optional("features", default=current_features): vol.All(cv.ensure_list, [vol.In(list(FEATURES.keys()))]),
                 }
-            ),
-        )
+            )
+
+            return self.async_show_form(step_id="init", data_schema=schema)
+        except Exception as exc:  # pragma: no cover - defensive logging for runtime issues
+            _LOGGER.exception("Error building options form: %s", exc)
+            return self.async_show_form(step_id="init", data_schema=vol.Schema({}), errors={"base": "unknown"})
