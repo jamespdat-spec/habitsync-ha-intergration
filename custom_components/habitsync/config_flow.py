@@ -38,7 +38,7 @@ class HabitSyncConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    @callback
+    @staticmethod
     def async_get_options_flow(entry):
         """Return the config flow for options."""
         return HabitSyncOptionsFlow(entry)
@@ -63,8 +63,8 @@ class HabitSyncOptionsFlow(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Optional("sensor_types", default=current_sensors): cv.multi_select(SENSOR_TYPES),
-                    vol.Optional("features", default=current_features): cv.multi_select(FEATURES),
+                    vol.Optional("sensor_types", default=current_sensors): vol.All(list, [vol.In(list(SENSOR_TYPES.keys()))]),
+                    vol.Optional("features", default=current_features): vol.All(list, [vol.In(list(FEATURES.keys()))]),
                 }
             ),
         )
