@@ -8,7 +8,7 @@
   "icon": "icon.svg",
   "issue_tracker": "https://github.com/jamespdat-spec/habitsync-ha-intergration/issues",
   "iot_class": "cloud_polling",
-  "requirements": [],
+  "requirements": ["httpx>=0.23"],
   "version": "0.1.0",
   "dependencies": []
 }
