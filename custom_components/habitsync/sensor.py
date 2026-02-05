@@ -39,7 +39,11 @@ class HabitSyncSensor(Entity):
     def unique_id(self):
         """Return a unique ID."""
         hid = self._get_habit_id()
-        return f"habitsync_{hid}" if hid is not None else None
+        if hid is not None:
+            return f"habitsync_{hid}"
+        # fallback to a stable name-based id
+        name = (self.habit.get("name") or "habitsync_habit").lower().replace(" ", "_")
+        return f"habitsync_{name}"
 
     @property
     def name(self):
@@ -62,8 +66,31 @@ class HabitSyncSensor(Entity):
 
     async def async_update(self):
         """Fetch new state data for the sensor."""
-        # TODO: This is not ideal, as it will fetch all habits again.
-        # The API should have an endpoint to get a single habit.
+        target_id = self._get_habit_id()
+        if not target_id:
+            _LOGGER.warning("Cannot update sensor: no habit ID found")
+            return
+
+        # Fetch today's record for this specific habit
+        try:
+            record = await self.api.get_record(target_id)
+            _LOGGER.debug("Record for habit %s: %s", target_id, record)
+            # Extract state from record
+            self._state = (
+                record.get("status")
+                or record.get("completion")
+                or record.get("value")
+                or record.get("recordValue")
+            )
+            # Set attributes from the record
+            self._attributes = {
+                k: v for k, v in record.items() if k in ("uuid", "habitUuid", "epochDay", "completion", "status", "recordValue", "value")
+            }
+            return
+        except Exception as exc:
+            _LOGGER.debug("Failed to fetch record for habit %s: %s", target_id, exc)
+
+        # Fallback: fetch all habits and find matching one
         raw = await self.api.get_habits()
 
         # Normalize different API response shapes into a list of habit dicts
@@ -79,7 +106,6 @@ class HabitSyncSensor(Entity):
         else:
             habits = raw
 
-        target_id = self._get_habit_id()
         for habit in habits:
             hid = (
                 habit.get("id")
@@ -96,4 +122,13 @@ class HabitSyncSensor(Entity):
                     or habit.get("value")
                     or habit.get("recordValue")
                 )
+                # Set attributes for the UI to show more details
+                self._attributes = {
+                    k: v for k, v in habit.items() if k in ("uuid", "habitUuid", "epochDay", "completion", "status", "recordValue")
+                }
                 break
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes for the sensor."""
+        return getattr(self, "_attributes", None)

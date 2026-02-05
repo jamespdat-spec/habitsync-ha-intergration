@@ -22,6 +22,34 @@ class HabitSyncApi:
         response.raise_for_status()
         return response.json()
 
+    async def get_record(self, habit_id: str, offset: int = 0, time_zone: str | None = None):
+        """Get a record for a habit.
+
+        Calls GET /api/record/<habit_id>/simple?offset=...&timeZone=...
+        """
+        await self._ensure_client()
+        params = {"offset": str(offset)}
+        if time_zone:
+            params["timeZone"] = time_zone
+        url = f"/api/record/{habit_id}/simple"
+        response = await self.client.get(url, params=params)
+        response.raise_for_status()
+        return response.json()
+
+    async def create_record(self, habit_id: str, value: float = 1.0, offset: int = 0, time_zone: str | None = None):
+        """Create a simple record for a habit.
+
+        Calls POST /api/record/<habit_id>/simple?value=...&offset=...&timeZone=...
+        """
+        await self._ensure_client()
+        params = {"value": str(value), "offset": str(offset)}
+        if time_zone:
+            params["timeZone"] = time_zone
+        url = f"/api/record/{habit_id}/simple"
+        response = await self.client.post(url, params=params)
+        response.raise_for_status()
+        return response.json()
+
     async def close(self):
         """Close the client."""
         if self.client is not None:

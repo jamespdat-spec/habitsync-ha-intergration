@@ -31,8 +31,29 @@ def test_unique_id_and_name():
     assert s.name == "Test Habit"
 
 
+def test_async_update_get_record():
+    """Test async_update calls get_record first."""
+    class FakeApi:
+        async def get_record(self, habit_id):
+            if habit_id == "abc":
+                return {"recordValue": 5, "uuid": "abc"}
+            raise ValueError("Unknown habit")
+        
+        async def get_habits(self):
+            return [{"id": "abc", "status": "ok"}]
+
+    s = HabitSyncSensor(FakeApi(), {"id": "abc", "name": "n"})
+    asyncio.run(s.async_update())
+    assert s.state == 5
+    assert s.extra_state_attributes is not None
+    assert s.extra_state_attributes.get("uuid") == "abc"
+
+
 def test_async_update_list_shape():
     class FakeApi:
+        async def get_record(self, habit_id):
+            raise Exception("Record API not available")
+        
         async def get_habits(self):
             return [{"id": "abc", "status": "ok"}]
 
@@ -44,6 +65,9 @@ def test_async_update_list_shape():
 def test_async_update_various_shapes():
     # shape: {'habits': [...]}
     class Api1:
+        async def get_record(self, habit_id):
+            return {"uuid": "u1", "completion": 5}
+        
         async def get_habits(self):
             return {"habits": [{"uuid": "u1", "completion": 5}]}
 
@@ -53,6 +77,9 @@ def test_async_update_various_shapes():
 
     # shape: {'data': [...]}
     class Api2:
+        async def get_record(self, habit_id):
+            return {"habitUuid": "h1", "value": 3.2}
+        
         async def get_habits(self):
             return {"data": [{"habitUuid": "h1", "value": 3.2}]}
 
@@ -62,6 +89,9 @@ def test_async_update_various_shapes():
 
     # single dict
     class Api3:
+        async def get_record(self, habit_id):
+            return {"id": "x", "status": "s"}
+        
         async def get_habits(self):
             return {"id": "x", "status": "s"}
 
