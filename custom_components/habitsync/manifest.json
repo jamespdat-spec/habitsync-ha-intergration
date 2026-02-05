@@ -5,7 +5,7 @@
   "config_flow": true,
   "options_flow": true,
   "documentation": "https://github.com/jamespdat-spec/habitsync-ha-intergration",
-  "icon": "icon.svg",
+  "icon": "mdi:check-circle",
   "issue_tracker": "https://github.com/jamespdat-spec/habitsync-ha-intergration/issues",
   "iot_class": "cloud_polling",
   "requirements": ["httpx>=0.23"],
