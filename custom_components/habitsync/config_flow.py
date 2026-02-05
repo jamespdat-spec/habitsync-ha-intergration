@@ -63,8 +63,8 @@ class HabitSyncOptionsFlow(config_entries.OptionsFlow):
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Optional("sensor_types", default=current_sensors): vol.All(list, [vol.In(list(SENSOR_TYPES.keys()))]),
-                    vol.Optional("features", default=current_features): vol.All(list, [vol.In(list(FEATURES.keys()))]),
+                    vol.Optional("sensor_types", default=current_sensors): vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES.keys()))]),
+                    vol.Optional("features", default=current_features): vol.All(cv.ensure_list, [vol.In(list(FEATURES.keys()))]),
                 }
             ),
         )
